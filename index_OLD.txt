@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>now</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>1~50 圓形轉盤與圖片顯示（Google Drive圖片）</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      background: #f9fafb;
+      margin-top: 36px;
+    }
+    #roulette-container {
+      position: relative;
+      display: inline-block;
+    }
+    #arrow {
+  /* 絕對定位：讓箭頭浮在轉盤上方 */
+  position: absolute;
+  
+  /* 位置調整：位於容器頂端稍微偏上 (-2px)，水平置中 (50%) */
+  top: -2px; 
+  left: 50%; 
+  
+  /* 繪製三角形的技巧：寬高設為 0，利用邊框粗細畫出形狀 */
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;  /* 左邊透明 */
+  border-right: 15px solid transparent; /* 右邊透明 */
+  border-top: 30px solid #e74c3c;       /* 上邊紅色 (箭頭本體顏色) */
+  
+  /* 修正置中：因為 left: 50% 是以左邊緣為準，這行能將箭頭中心點拉回正中央 */
+  transform: translateX(-50%);
+  
+  /* 層級：確保箭頭蓋在轉盤 (SVG) 上面，不會被遮住 */
+  z-index: 10;
+  
+  /* 顯示模式 */
+  display: block; 
+}
+    #spin-btn {
+      margin-top: 32px;
+      padding: 12px 32px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      background: #3178c6;
+      color: #fff;
+      transition: background 0.2s;
+    }
+    #spin-btn:hover {
+      background: #25558a;
+    }
+    #result {
+      margin-top: 32px;
+      font-size: 1.7rem;
+      font-weight: bold;
+      color: #3178c6;
+    }
+    svg {
+      display: block;
+      margin: auto;
+      cursor: pointer;
+      user-select: none;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 6px 32px #9992;
+    }
+    #card-image {
+      margin-top: 30px;
+      max-width: 300px;
+      max-height: none;
+      border-radius: 12px;
+      border: 3px solid #3178c6;
+      box-shadow: 0 4px 12px #9995;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h2>1~50 圓形轉盤與圖片展示 (Google Drive圖片版)</h2>
+  <div id="roulette-container">
+    <div id="arrow"></div>
+    <svg id="wheel" width="400" height="400" viewBox="0 0 400 400"></svg>
+  </div>
+  <button id="spin-btn">轉動轉盤 Spin</button>
+  <div id="result">請點擊按鈕開始轉動</div>
+  <img id="card-image" src=".\image\0.jpg" alt="牌卡圖片" />
+  <script>
+    const sectors = 50;
+    const colors = ["#eaeaea", "#efebc2"];
+    const wheel = document.getElementById('wheel');
+    const cardImage = document.getElementById('card-image');
+    const resultDiv = document.getElementById('result');
+// 自動產生 1.jpg 到 50.jpg 的路徑陣列
+    // 這樣比手動輸入 50 行更不容易出錯
+    const imageLinks = [];
+    for (let i = 1; i <= 50; i++) {
+      // 注意：路徑使用 ./image/ 開頭
+      imageLinks.push(`./image/${i}.jpg`);
+    }
+
+    // 洗牌函式，亂序號碼
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // 繪製轉盤並返回亂序號碼陣列
+    function drawWheel() {
+      let numbers = Array.from({ length: sectors }, (_, i) => i + 1);
+      numbers = shuffleArray(numbers);
+
+      let r = 180, cx = 200, cy = 200;
+      let deg = 360 / sectors;
+      let current = 0;
+      let svgStr = '';
+      for (let i = 0; i < sectors; i++) {
+        let start = (current - 90) * Math.PI / 180;
+        let end = (current + deg - 90) * Math.PI / 180;
+        let x1 = cx + r * Math.cos(start);
+        let y1 = cy + r * Math.sin(start);
+        let x2 = cx + r * Math.cos(end);
+        let y2 = cy + r * Math.sin(end);
+        let largeArc = deg > 180 ? 1 : 0;
+
+        svgStr += `
+          <path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} z"
+          fill="${colors[i % 2]}"
+          stroke="#ccc"
+          stroke-width="1"/>
+          <text x="${cx + 140 * Math.cos((current + deg / 2 - 90) * Math.PI / 180)}"
+                y="${cy + 140 * Math.sin((current + deg / 2 - 90) * Math.PI / 180)}"
+                font-size="18"
+                fill="#3178c6"
+                text-anchor="middle"
+                dy="7">${numbers[i]}</text>`;
+        current += deg;
+      }
+      wheel.innerHTML = svgStr;
+      return numbers;
+    }
+
+    let randomNumbers = drawWheel();
+
+    let isSpinning = false;
+    document.getElementById('spin-btn').onclick = function () {
+      if (isSpinning) return;
+      isSpinning = true;
+
+      let resultNum = Math.floor(Math.random() * sectors) + 1;// 隨機號碼
+      let index = randomNumbers.indexOf(resultNum);// 亂序中位置
+
+// 計算轉盤旋轉角度
+      let sectorDegree = 360 / sectors;
+      let rotateAngle = 360 * 5 + index * sectorDegree + sectorDegree / 2;
+
+      wheel.style.transition = "transform 4s cubic-bezier(.17,.79,.37,.99)";
+      wheel.style.transform = `rotate(-${rotateAngle}deg)`;
+
+      setTimeout(() => {
+        resultDiv.textContent = "指向號碼 Number: " + resultNum;
+// 圖片對應顯示
+        cardImage.src = imageLinks[resultNum - 1];
+        cardImage.style.display = "inline-block";
+        //cardImage.src = "https://drive.google.com/uc?export=view&id=10TVNfiwtw962rOCjY8xFzdrMB20Nt7aw";
+        //cardImage.style.display = "inline-block";
+        isSpinning = false;
+      }, 4000);
+    };
+
+    wheel.addEventListener('transitionend', () => {
+      wheel.style.transition = "";
+      wheel.style.transform = "";
+    });
+  </script>
+</body>
+</html>
+    
