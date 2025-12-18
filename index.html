@@ -3,36 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>1~50 圓形轉盤 (行動裝置優化版)</title>
+  <title>1~50 精準轉盤 (修正版)</title>
   <style>
-    /* 基礎樣式與響應式排版 */
     body {
       text-align: center;
       font-family: "Microsoft JhengHei", Arial, sans-serif;
       background: #f9fafb;
       margin: 0;
-      padding: 20px 10px; /* 增加邊距防止手機邊邊太擠 */
+      padding: 20px 0;
     }
 
-    h2 {
-      font-size: 1.5rem;
-      color: #333;
-    }
-
-    /* 轉盤容器設定 */
     #roulette-container {
       position: relative;
       display: inline-block;
-      width: 100%; /* 寬度隨父容器 */
-      max-width: 400px; /* 在電腦上最大不超過 400px */
+      width: 90vw; /* 隨手機螢幕寬度 */
+      max-width: 400px; /* 電腦版最大限制 */
       margin: 0 auto;
-      touch-action: manipulation; /* 優化手機操作 */
     }
 
-    /* 頂部箭頭 */
     #arrow {
       position: absolute;
-      top: -10px; /* 稍微往上調，避免擋住數字 */
+      top: -5px;
       left: 50%;
       width: 0;
       height: 0;
@@ -43,42 +34,38 @@
       z-index: 10;
     }
 
-    /* 轉盤 SVG 響應式縮放 */
     svg {
       display: block;
-      width: 100%; /* 讓 SVG 跟隨容器寬度自動縮放 */
-      height: auto; /* 保持比例 */
-      user-select: none;
+      width: 100%; /* 響應式 */
+      height: auto;
       background: #fff;
       border-radius: 50%;
       box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      transform-origin: center center;
+      /* 確保在所有瀏覽器都繞中心旋轉 */
+      transform-origin: 50% 50%;
     }
 
-    /* 按鈕樣式優化 */
     #spin-btn {
       margin-top: 25px;
-      padding: 15px 40px; /* 增加點擊區域，方便手機操作 */
+      padding: 12px 40px;
       font-size: 1.2rem;
       font-weight: bold;
       cursor: pointer;
-      border-radius: 50px; /* 圓角更現代感 */
+      border-radius: 50px;
       border: none;
       background: #3178c6;
       color: #fff;
       box-shadow: 0 4px 10px rgba(49, 120, 198, 0.3);
-      transition: all 0.2s;
-      -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍色框 */
+      /* 防止手機點擊時出現藍色框 */
+      -webkit-tap-highlight-color: transparent;
     }
 
     #spin-btn:active {
       transform: scale(0.95);
-      background: #25558a;
     }
 
     #spin-btn:disabled {
       background: #ccc;
-      box-shadow: none;
       cursor: not-allowed;
     }
 
@@ -90,15 +77,13 @@
       min-height: 2rem;
     }
 
-    /* 圖片顯示區域優化 */
     #card-image {
       margin-top: 20px;
-      width: 100%; /* 手機上寬度隨容器 */
-      max-width: 320px; /* 在大螢幕上限制最大寬度 */
-      height: auto;
+      width: 80vw;
+      max-width: 300px;
       border-radius: 12px;
-      border: 4px solid #3178c6;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      border: 3px solid #3178c6;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
       display: inline-block;
     }
   </style>
@@ -109,30 +94,31 @@
 
   <div id="roulette-container">
     <div id="arrow"></div>
-    <svg id="wheel" viewBox="0 0 400 400"></svg>
+    <svg id="wheel" width="400" height="400" viewBox="0 0 400 400"></svg>
   </div>
 
   <div id="result">請點擊按鈕開始轉動</div>
   <button id="spin-btn">轉動轉盤 Spin</button>
   
   <br>
-  <img id="card-image" src="image/0.JPG" alt="牌卡圖片" />
+  <img id="card-image" src="image/0.JPG" alt="請按按鈕進行抽獎" />
 
   <script>
     const sectors = 50;
-    const colors = ["#f8f9fa", "#f1f3f5"]; // 淺灰色系，讓數字更明顯
+    // 使用高對比顏色，確保數字清晰
+    const colors = ["#ffffff", "#e9ecef"];
     const wheel = document.getElementById('wheel');
     const cardImage = document.getElementById('card-image');
     const resultDiv = document.getElementById('result');
     const spinBtn = document.getElementById('spin-btn');
 
-    // 產生圖片路徑 (依據您的需求使用 .JPG 大寫)
+    // 1. 產生圖片路徑 (請確保資料夾名稱是 image，副檔名是 .JPG)
     const imageLinks = [];
     for (let i = 1; i <= 50; i++) {
       imageLinks.push(`image/${i}.JPG`);
     }
 
-    // 洗牌函式
+    // 2. 洗牌
     function shuffleArray(array) {
       let shuffled = [...array];
       for (let i = shuffled.length - 1; i > 0; i--) {
@@ -142,24 +128,85 @@
       return shuffled;
     }
 
-    // 繪製轉盤
+    // 3. 繪製轉盤 (簡化座標系統以防數字消失)
     function drawWheel() {
       let numbers = Array.from({ length: sectors }, (_, i) => i + 1);
       let shuffledNumbers = shuffleArray(numbers);
 
-      let r = 180, cx = 200, cy = 200;
-      let deg = 360 / sectors; 
-      let current = 0;
+      const cx = 200, cy = 200, r = 180;
+      const deg = 360 / sectors; // 7.2
       let svgStr = '';
-      
-      for (let i = 0; i < sectors; i++) {
-        let start = (current - 90) * Math.PI / 180;
-        let end = (current + deg - 90) * Math.PI / 180;
-        let x1 = cx + r * Math.cos(start);
-        let y1 = cy + r * Math.sin(start);
-        let x2 = cx + r * Math.cos(end);
-        let y2 = cy + r * Math.sin(end);
-        let largeArc = deg > 180 ? 1 : 0;
 
-        // 扇區
-        svgStr += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},
+      for (let i = 0; i < sectors; i++) {
+        const angle = i * deg;
+        const startRad = (angle - 90) * Math.PI / 180;
+        const endRad = (angle + deg - 90) * Math.PI / 180;
+
+        const x1 = cx + r * Math.cos(startRad);
+        const y1 = cy + r * Math.sin(startRad);
+        const x2 = cx + r * Math.cos(endRad);
+        const y2 = cy + r * Math.sin(endRad);
+
+        // 繪製扇區
+        svgStr += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" 
+                         fill="${colors[i % 2]}" stroke="#ccc" stroke-width="0.5"/>`;
+        
+        // 繪製數字：精簡計算位置
+        const textAngle = angle + deg / 2;
+        const textRad = (textAngle - 90) * Math.PI / 180;
+        const tx = cx + 150 * Math.cos(textRad);
+        const ty = cy + 150 * Math.sin(textRad);
+
+        // 使用基礎 rotate 屬性，確保相容性
+        svgStr += `<text x="${tx}" y="${ty}" font-size="12" font-weight="bold" fill="#3178c6" 
+                    text-anchor="middle" alignment-baseline="middle"
+                    transform="rotate(${textAngle}, ${tx}, ${ty})">${shuffledNumbers[i]}</text>`;
+      }
+      wheel.innerHTML = svgStr;
+      return shuffledNumbers;
+    }
+
+    let randomNumbers = drawWheel();
+    let isSpinning = false;
+
+    // 4. 按鈕邏輯
+    spinBtn.addEventListener('click', function() {
+      if (isSpinning) return;
+      isSpinning = true;
+      spinBtn.disabled = true;
+      resultDiv.textContent = "轉動中...";
+
+      // A. 先歸位
+      wheel.style.transition = "none";
+      wheel.style.transform = "rotate(0deg)";
+
+      // 強制瀏覽器重繪
+      void wheel.offsetWidth;
+
+      // B. 計算結果並旋轉
+      setTimeout(() => {
+        const resultNum = Math.floor(Math.random() * sectors) + 1;
+        const index = randomNumbers.indexOf(resultNum);
+        const sectorDegree = 360 / sectors;
+        
+        // 算出該號碼中心與頂點的角度差
+        const currentAngleFromTop = index * sectorDegree + sectorDegree / 2;
+        // 總旋轉：5圈 + 回正角度
+        const totalRotation = (360 * 5) + currentAngleFromTop;
+
+        wheel.style.transition = "transform 4s cubic-bezier(0.15, 0, 0.15, 1)";
+        wheel.style.transform = `rotate(-${totalRotation}deg)`;
+
+        // C. 動畫結束
+        setTimeout(() => {
+          resultDiv.textContent = "指向號碼：" + resultNum;
+          cardImage.src = imageLinks[resultNum - 1];
+          
+          isSpinning = false;
+          spinBtn.disabled = false;
+        }, 4000);
+      }, 50);
+    });
+  </script>
+</body>
+</html>
