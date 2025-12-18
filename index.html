@@ -2,21 +2,37 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>1~50 圓形轉盤 (精準對齊版)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>1~50 圓形轉盤 (行動裝置優化版)</title>
   <style>
+    /* 基礎樣式與響應式排版 */
     body {
       text-align: center;
-      font-family: Arial, sans-serif;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
       background: #f9fafb;
-      margin-top: 36px;
+      margin: 0;
+      padding: 20px 10px; /* 增加邊距防止手機邊邊太擠 */
     }
+
+    h2 {
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    /* 轉盤容器設定 */
     #roulette-container {
       position: relative;
       display: inline-block;
+      width: 100%; /* 寬度隨父容器 */
+      max-width: 400px; /* 在電腦上最大不超過 400px */
+      margin: 0 auto;
+      touch-action: manipulation; /* 優化手機操作 */
     }
+
+    /* 頂部箭頭 */
     #arrow {
       position: absolute;
-      top: -2px;
+      top: -10px; /* 稍微往上調，避免擋住數字 */
       left: 50%;
       width: 0;
       height: 0;
@@ -25,77 +41,92 @@
       border-top: 30px solid #e74c3c;
       transform: translateX(-50%);
       z-index: 10;
-      display: block;
     }
-    #spin-btn {
-      margin-top: 32px;
-      padding: 12px 32px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      border-radius: 8px;
-      border: none;
-      background: #3178c6;
-      color: #fff;
-      transition: background 0.2s;
-    }
-    #spin-btn:hover {
-      background: #25558a;
-    }
-    #spin-btn:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
-    #result {
-      margin-top: 32px;
-      font-size: 1.7rem;
-      font-weight: bold;
-      color: #3178c6;
-      min-height: 1.7rem;
-    }
+
+    /* 轉盤 SVG 響應式縮放 */
     svg {
       display: block;
-      margin: auto;
-      cursor: pointer;
+      width: 100%; /* 讓 SVG 跟隨容器寬度自動縮放 */
+      height: auto; /* 保持比例 */
       user-select: none;
       background: #fff;
       border-radius: 50%;
-      box-shadow: 0 6px 32px #9992;
-      transform-origin: 200px 200px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      transform-origin: center center;
     }
+
+    /* 按鈕樣式優化 */
+    #spin-btn {
+      margin-top: 25px;
+      padding: 15px 40px; /* 增加點擊區域，方便手機操作 */
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 50px; /* 圓角更現代感 */
+      border: none;
+      background: #3178c6;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(49, 120, 198, 0.3);
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍色框 */
+    }
+
+    #spin-btn:active {
+      transform: scale(0.95);
+      background: #25558a;
+    }
+
+    #spin-btn:disabled {
+      background: #ccc;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #3178c6;
+      min-height: 2rem;
+    }
+
+    /* 圖片顯示區域優化 */
     #card-image {
-      margin-top: 30px;
-      max-width: 90%;
-      max-height: 400px;
+      margin-top: 20px;
+      width: 100%; /* 手機上寬度隨容器 */
+      max-width: 320px; /* 在大螢幕上限制最大寬度 */
+      height: auto;
       border-radius: 12px;
-      border: 3px solid #3178c6;
-      box-shadow: 0 4px 12px #9995;
-      display: inline-block; /* 預設顯示 0.jpg */
+      border: 4px solid #3178c6;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <h2>1~50 圓形轉盤與圖片展示 (精準對齊版)</h2>
-  
+
+  <h2>1~50 圓形轉盤抽獎</h2>
+
   <div id="roulette-container">
     <div id="arrow"></div>
-    <svg id="wheel" width="400" height="400" viewBox="0 0 400 400"></svg>
+    <svg id="wheel" viewBox="0 0 400 400"></svg>
   </div>
 
-  <br>
-  <button id="spin-btn">轉動轉盤 Spin</button>
   <div id="result">請點擊按鈕開始轉動</div>
+  <button id="spin-btn">轉動轉盤 Spin</button>
   
+  <br>
   <img id="card-image" src="image/0.JPG" alt="牌卡圖片" />
 
   <script>
     const sectors = 50;
-    const colors = ["#eaeaea", "#efebc2"];
+    const colors = ["#f8f9fa", "#f1f3f5"]; // 淺灰色系，讓數字更明顯
     const wheel = document.getElementById('wheel');
     const cardImage = document.getElementById('card-image');
     const resultDiv = document.getElementById('result');
     const spinBtn = document.getElementById('spin-btn');
 
-    // 產生圖片路徑
+    // 產生圖片路徑 (依據您的需求使用 .JPG 大寫)
     const imageLinks = [];
     for (let i = 1; i <= 50; i++) {
       imageLinks.push(`image/${i}.JPG`);
@@ -117,11 +148,10 @@
       let shuffledNumbers = shuffleArray(numbers);
 
       let r = 180, cx = 200, cy = 200;
-      let deg = 360 / sectors; // 7.2 度
+      let deg = 360 / sectors; 
       let current = 0;
       let svgStr = '';
       
-      // 注意：這裡繪製時，第一個扇區 (index 0) 是從 12 點鐘方向開始順時針繪製
       for (let i = 0; i < sectors; i++) {
         let start = (current - 90) * Math.PI / 180;
         let end = (current + deg - 90) * Math.PI / 180;
@@ -131,76 +161,5 @@
         let y2 = cy + r * Math.sin(end);
         let largeArc = deg > 180 ? 1 : 0;
 
-        svgStr += `
-          <path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} z"
-          fill="${colors[i % 2]}"
-          stroke="#ccc"
-          stroke-width="1"/>
-          <text x="${cx + 140 * Math.cos((current + deg / 2 - 90) * Math.PI / 180)}"
-                y="${cy + 140 * Math.sin((current + deg / 2 - 90) * Math.PI / 180)}"
-                font-size="18"
-                fill="#3178c6"
-                text-anchor="middle"
-                dy="7"
-                transform="rotate(${current + deg / 2 + 90}, ${cx + 140 * Math.cos((current + deg / 2 - 90) * Math.PI / 180)}, ${cy + 140 * Math.sin((current + deg / 2 - 90) * Math.PI / 180)})">
-            ${shuffledNumbers[i]}
-          </text>`;
-        current += deg;
-      }
-      wheel.innerHTML = svgStr;
-      return shuffledNumbers;
-    }
-
-    let randomNumbers = drawWheel();
-    let isSpinning = false;
-
-    spinBtn.onclick = function () {
-      if (isSpinning) return;
-      isSpinning = true;
-      spinBtn.disabled = true;
-      resultDiv.textContent = "準備發射...";
-
-      // 1. 先歸零 (無動畫)
-      wheel.style.transition = "none";
-      wheel.style.transform = "rotate(0deg)";
-
-      // 2. 稍微延遲後開始旋轉，確保歸零動作被執行
-      setTimeout(() => {
-        // --- 隨機抽出一個號碼 ---
-        let resultNum = Math.floor(Math.random() * sectors) + 1;
-        
-        // --- 找出該號碼在轉盤上的位置 (Index) ---
-        // index 0 代表繪製在 12點鐘~12點01分 的那個扇區
-        let index = randomNumbers.indexOf(resultNum);
-        
-        // --- 計算角度 ---
-        let sectorDegree = 360 / sectors;
-        
-        // 計算該扇區中心點相對於 12 點鐘 (0度) 順時針偏了多少度
-        // 例如 index 0 的中心是 3.6 度
-        let currentAngleFromTop = index * sectorDegree + sectorDegree / 2;
-
-        // --- 設定旋轉目標 ---
-        // 因為目標在順時針方向 X 度，我們要逆時針轉 X 度才能讓它回到頂部
-        // 加上 5 圈 (1800度) 增加視覺效果
-        let totalRotation = 360 * 5 + currentAngleFromTop;
-
-        // --- 執行旋轉 ---
-        wheel.style.transition = "transform 4s cubic-bezier(.17,.79,.37,.99)";
-        wheel.style.transform = `rotate(-${totalRotation}deg)`;
-
-        // --- 顯示結果 ---
-        setTimeout(() => {
-          resultDiv.textContent = "指向號碼 Number: " + resultNum;
-          cardImage.src = imageLinks[resultNum - 1];
-          cardImage.style.display = "inline-block";
-          
-          isSpinning = false;
-          spinBtn.disabled = false;
-        }, 4000);
-
-      }, 50);
-    };
-  </script>
-</body>
-</html>
+        // 扇區
+        svgStr += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},
