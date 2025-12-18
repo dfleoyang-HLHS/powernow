@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>1~50 圓形轉盤 (響應式精準版)</title>
+  <title>1~50 圓形轉盤 (手機中心修正版)</title>
   <style>
     body {
       text-align: center;
@@ -13,12 +13,11 @@
       padding: 20px 10px;
     }
 
-    /* 2. 讓轉盤容器具備彈性 */
     #roulette-container {
       position: relative;
       display: inline-block;
-      width: 100%;       /* 手機上隨寬度縮放 */
-      max-width: 400px;  /* 電腦上保持最大 400px */
+      width: 100%;
+      max-width: 400px;
       margin: 0 auto;
     }
 
@@ -36,17 +35,20 @@
       display: block;
     }
 
-    /* 3. SVG 彈性縮放設定 */
     svg {
       display: block;
-      width: 100%;       /* 寬度百分之百 */
-      height: auto;      /* 高度自動保持比例 */
+      width: 100%;
+      height: auto;
       margin: auto;
       user-select: none;
       background: #fff;
       border-radius: 50%;
       box-shadow: 0 6px 32px rgba(0,0,0,0.1);
-      transform-origin: 200px 200px; /* 以 viewBox 中心為準 */
+      
+      /* --- 關鍵修正處 --- */
+      transform-origin: center; /* 使用 center 確保縮放時中心點不變 */
+      transform-box: view-box;  /* 強制瀏覽器參考 SVG 的畫布座標，避免手機瀏覽器判斷錯誤 */
+      /* ---------------- */
     }
 
     #spin-btn {
@@ -59,16 +61,11 @@
       background: #3178c6;
       color: #fff;
       transition: background 0.2s;
+      -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
     }
 
-    #spin-btn:hover {
-      background: #25558a;
-    }
-
-    #spin-btn:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
+    #spin-btn:hover { background: #25558a; }
+    #spin-btn:disabled { background: #aaa; cursor: not-allowed; }
 
     #result {
       margin-top: 32px;
@@ -172,14 +169,11 @@
       spinBtn.disabled = true;
       resultDiv.textContent = "準備發射...";
 
-      // 1. 先歸零
       wheel.style.transition = "none";
       wheel.style.transform = "rotate(0deg)";
       
-      // 強制重繪
-      void wheel.offsetWidth;
+      void wheel.offsetWidth; // 強制重繪
 
-      // 2. 啟動旋轉邏輯
       setTimeout(() => {
         let resultNum = Math.floor(Math.random() * sectors) + 1;
         let index = randomNumbers.indexOf(resultNum);
@@ -195,11 +189,9 @@
           resultDiv.textContent = "指向號碼 Number: " + resultNum;
           cardImage.src = imageLinks[resultNum - 1];
           cardImage.style.display = "inline-block";
-
           isSpinning = false;
           spinBtn.disabled = false;
         }, 4000);
-
       }, 50);
     };
   </script>
